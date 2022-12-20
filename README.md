@@ -5,7 +5,7 @@ Sandpit is a work in progress and this isn't even its final form.
 
 Sandpit is unsupported and may break your system, things _**should**_ work but they might not. 
 
-![a very shifty monkey](https://raw.githubusercontent.com/maximuskowalski/Sandpit/main/images/shiftymonkey.jpg?raw=true)
+![a very shifty monkey](https://raw.githubusercontent.com/saltyorg/Sandpit/main/images/shiftymonkey.jpg?raw=true)
 
 
 It would be great to have docs for each submission but that may not always happen. Docs should probably just be included as a markdown file for now but we may enable the wiki on this repo. For now it won't be part of the official Saltbox documentation.
