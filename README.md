@@ -1,3 +1,4 @@
+# DO NOT TRY TO USE THIS YET
 # Saltbox Sandpit Repo
 [![Discord](https://img.shields.io/discord/853755447970758686)](https://discord.gg/ugfKXpFND8)
 [![License:](https://img.shields.io/github/license/saltyorg/Sandpit)](LICENSE.md)
@@ -12,7 +13,7 @@ Sandpit Repository for Totally Unofficial Saltbox Add-ons, recipes, scripts and 
 
 Sandpit is a work in progress and this isn't even its final form.
 
-Sandpit is unsupported and may break your system, things _**should**_ work but they might not. 
+Sandpit is unsupported and may break your system, things _**should**_ work but they might not.
 
 ![a very shifty monkey](https://raw.githubusercontent.com/saltyorg/Sandpit/main/images/shiftymonkey.jpg?raw=true)
 

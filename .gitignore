@@ -1,0 +1,27 @@
+# MacOS
+.DS_Store
+
+# Python
+*.pyc
+
+# VSCode
+.vscode/
+/.vs
+.vscode/settings.json
+
+# Ansible
+/*.retry
+
+# Sandpit
+/ansible.cfg
+/*.yml
+!/sandpit.yml
+
+# Settings
+# /settings.yml
+
+### Misc ###
+/.idea
+/*.log
+/*.log.*
+/.env

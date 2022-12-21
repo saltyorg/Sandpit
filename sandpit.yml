@@ -9,3 +9,7 @@
     - { role: pre_tasks }
     - { role: myrole, tags: ['myrole'] }
     - { role: helloworld, tags: ['helloworld'] }
+    - { role: crowdsec, tags: ['crowdsec'] }
+    - { role: flame, tags: ['flame'] }
+    - { role: spotweb, tags: ['spotweb'] }
+    - { role: zigbee2mqtt, tags: ['zigbee2mqtt'] }

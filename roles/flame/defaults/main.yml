@@ -1,0 +1,150 @@
+##########################################################################
+# Title:         Sandpit: Flame Dashboard | Default Variables            #
+# Author(s):     CHAIR/Raneydazed                                        #
+# URL:           https://github.com/saltyorg/Sandpit                     #
+# --                                                                     #
+##########################################################################
+#                   GNU General Public License v3.0                      #
+##########################################################################
+---
+################################
+# Basics
+################################
+
+flame_name: flame
+
+################################
+# Paths
+################################
+
+flame_paths_folder: "{{ flame_name }}"
+flame_paths_location: "{{ server_appdata_path }}/{{ flame_paths_folder }}"
+flame_paths_folders_list:
+  - "{{ flame_paths_location }}"
+
+################################
+# Web
+################################
+
+flame_web_subdomain: "{{ flame_name }}"
+flame_web_domain: "{{ user.domain }}"
+flame_web_port: "5005"
+flame_web_url: "{{ 'https://' + flame_web_subdomain + '.' + flame_web_domain
+                if (reverse_proxy_is_enabled)
+                else 'http://localhost:' + flame_web_port }}"
+
+################################
+# DNS
+################################
+
+flame_dns_record: "{{ flame_web_subdomain }}"
+flame_dns_zone: "{{ flame_web_domain }}"
+flame_dns_proxy: "{{ dns.proxied }}"
+
+################################
+# Traefik
+################################
+
+flame_traefik_sso_middleware: "{{ traefik_default_sso_middleware }}"
+flame_traefik_middleware: "{{ traefik_default_middleware + ',' + flame_traefik_sso_middleware
+                           if (flame_traefik_sso_middleware | length > 0)
+                           else traefik_default_middleware }}"
+flame_traefik_certresolver: "{{ traefik_default_certresolver }}"
+flame_traefik_enabled: true
+flame_traefik_api_enabled: true
+flame_traefik_api_endpoint: "`/api`"
+
+################################
+# Docker
+################################
+
+# Container
+flame_docker_container: "{{ flame_name }}"
+
+# Image
+flame_docker_image_pull: true
+flame_docker_image_tag: "latest"
+flame_docker_image: "pawelmalak/flame:{{ flame_docker_image_tag }}"
+
+# Ports
+flame_docker_ports_defaults: []
+flame_docker_ports_ui:
+  - "{{ flame_web_port }}:{{ flame_web_port }}"
+flame_docker_ports_custom: []
+flame_docker_ports: "{{ flame_docker_ports_defaults
+                        + flame_docker_ports_ui
+                        + flame_docker_ports_custom
+                     if (not reverse_proxy_is_enabled)
+                     else flame_docker_ports_defaults
+                        + flame_docker_ports_custom }}"
+
+# Envs
+flame_docker_envs_default:
+  TZ: "{{ tz }}"
+  PASSWORD: "{{ user.pass }}"
+flame_docker_envs_custom: {}
+flame_docker_envs: "{{ flame_docker_envs_default
+                       | combine(flame_docker_envs_custom) }}"
+
+# Commands
+flame_docker_commands_default: []
+flame_docker_commands_custom: []
+flame_docker_commands: "{{ flame_docker_commands_default
+                           + flame_docker_commands_custom }}"
+
+# Volumes
+flame_docker_volumes_default:
+  - "{{ flame_paths_location }}:/app/data"
+  - /var/run/docker.sock:/var/run/docker.sock
+flame_docker_volumes_custom: []
+flame_docker_volumes: "{{ flame_docker_volumes_default
+                          + flame_docker_volumes_custom }}"
+
+# Devices
+flame_docker_devices_default: []
+flame_docker_devices_custom: []
+flame_docker_devices: "{{ flame_docker_devices_default
+                          + flame_docker_devices_custom }}"
+
+# Hosts
+flame_docker_hosts_default: []
+flame_docker_hosts_custom: []
+flame_docker_hosts: "{{ docker_hosts_common
+                        | combine(flame_docker_hosts_default)
+                        | combine(flame_docker_hosts_custom) }}"
+
+# Labels
+flame_docker_labels_default: {}
+flame_docker_labels_custom: {}
+flame_docker_labels: "{{ docker_labels_common
+                         | combine(flame_docker_labels_default)
+                         | combine(flame_docker_labels_custom) }}"
+
+# Hostname
+flame_docker_hostname: "{{ flame_name }}"
+
+# Networks
+flame_docker_networks_alias: "{{ flame_name }}"
+flame_docker_networks_default: []
+flame_docker_networks_custom: []
+flame_docker_networks: "{{ docker_networks_common
+                           + flame_docker_networks_default
+                           + flame_docker_networks_custom }}"
+
+# Capabilities
+flame_docker_capabilities_default: []
+flame_docker_capabilities_custom: []
+flame_docker_capabilities: "{{ flame_docker_capabilities_default
+                               + flame_docker_capabilities_custom }}"
+
+# Security Opts
+flame_docker_security_opts_default: []
+flame_docker_security_opts_custom: []
+flame_docker_security_opts: "{{ flame_docker_security_opts_default
+                                + flame_docker_security_opts_custom }}"
+
+# Restart Policy
+flame_docker_restart_policy: unless-stopped
+
+# State
+flame_docker_state: started
