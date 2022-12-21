@@ -1,0 +1,124 @@
+#########################################################################
+# Title:            Sandpit: CrowdSec                                   #
+# Author(s):        JigSawFr                                            #
+# URL:              https://github.com/crowdsecurity/crowdsec           #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+################################
+# Basics
+################################
+
+crowdsec_name: crowdsec
+
+################################
+# Paths
+################################
+
+crowdsec_paths_folder: "{{ crowdsec_name }}"
+crowdsec_paths_location: "{{ server_appdata_path }}/{{ crowdsec_paths_folder }}"
+crowdsec_paths_folders_list:
+  - "{{ crowdsec_paths_location }}"
+  - "{{ crowdsec_paths_location }}/data"
+  - "{{ crowdsec_paths_location }}/config"
+
+################################
+# Docker
+################################
+
+# Container
+crowdsec_docker_container: "{{ crowdsec_name }}"
+
+# Image
+crowdsec_docker_image_pull: true
+crowdsec_docker_image_tag: "latest"
+crowdsec_docker_image: "crowdsecurity/crowdsec:{{ crowdsec_docker_image_tag }}"
+
+# Ports
+crowdsec_docker_ports_defaults:
+  - "127.0.0.1:8080:8080"
+crowdsec_docker_ports_custom: []
+crowdsec_docker_ports: "{{ crowdsec_docker_ports_defaults
+                           + crowdsec_docker_ports_custom }}"
+
+# Envs
+crowdsec_docker_envs_default:
+  PUID: "{{ uid }}"
+  PGID: "{{ gid }}"
+  TZ: "{{ tz }}"
+  COLLECTIONS: "crowdsecurity/sshd LePresidente/authelia crowdsecurity/traefik crowdsecurity/linux crowdsecurity/linux-lpe crowdsecurity/iptables"
+crowdsec_docker_envs_custom: {}
+crowdsec_docker_envs: "{{ crowdsec_docker_envs_default
+                          | combine(crowdsec_docker_envs_custom) }}"
+
+# Commands
+crowdsec_docker_commands_default: []
+crowdsec_docker_commands_custom: []
+crowdsec_docker_commands: "{{ crowdsec_docker_commands_default
+                              + crowdsec_docker_commands_custom }}"
+
+# Volumes
+crowdsec_docker_volumes_default:
+  - "{{ crowdsec_paths_location }}/data:/var/lib/crowdsec/data"
+  - "{{ crowdsec_paths_location }}/config:/etc/crowdsec"
+  - "{{ server_appdata_path }}:/opt"
+crowdsec_docker_volumes_logs:
+  - "/var/log/auth.log:/logs/auth.log:ro"
+  - "/var/log/syslog:/logs/syslog.log:ro"
+  - "/var/log/kern.log:/logs/kern.log:ro"
+  - "/opt/authelia/authelia.log:/logs/authelia.log:ro"
+  - "/opt/traefik:/logs/traefik:ro"
+crowdsec_docker_volumes_custom: []
+crowdsec_docker_volumes: "{{ crowdsec_docker_volumes_default
+                             + crowdsec_docker_volumes_logs
+                             + crowdsec_docker_volumes_custom }}"
+
+# Devices
+crowdsec_docker_devices_default: []
+crowdsec_docker_devices_custom: []
+crowdsec_docker_devices: "{{ crowdsec_docker_devices_default
+                             + crowdsec_docker_devices_custom }}"
+
+# Hosts
+crowdsec_docker_hosts_default: []
+crowdsec_docker_hosts_custom: []
+crowdsec_docker_hosts: "{{ docker_hosts_common
+                           | combine(crowdsec_docker_hosts_default)
+                           | combine(crowdsec_docker_hosts_custom) }}"
+
+# Labels
+crowdsec_docker_labels_default: []
+crowdsec_docker_labels_custom: {}
+crowdsec_docker_labels: "{{ docker_labels_common
+                            | combine(crowdsec_docker_labels_default)
+                            | combine(crowdsec_docker_labels_custom) }}"
+
+# Hostname
+crowdsec_docker_hostname: "{{ crowdsec_name }}"
+
+# Networks
+crowdsec_docker_networks_alias: "{{ crowdsec_name }}"
+crowdsec_docker_networks_default: []
+crowdsec_docker_networks_custom: []
+crowdsec_docker_networks: "{{ docker_networks_common
+                              + crowdsec_docker_networks_default
+                              + crowdsec_docker_networks_custom }}"
+
+# Capabilities
+crowdsec_docker_capabilities_default: []
+crowdsec_docker_capabilities_custom: []
+crowdsec_docker_capabilities: "{{ crowdsec_docker_capabilities_default
+                                  + crowdsec_docker_capabilities_custom }}"
+
+# Security Opts
+crowdsec_docker_security_opts_default: []
+crowdsec_docker_security_opts_custom: []
+crowdsec_docker_security_opts: "{{ crowdsec_docker_security_opts_default
+                                   + crowdsec_docker_security_opts_custom }}"
+
+# Restart Policy
+crowdsec_docker_restart_policy: unless-stopped
+
+# State
+crowdsec_docker_state: started

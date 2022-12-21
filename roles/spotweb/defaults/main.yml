@@ -1,0 +1,155 @@
+#########################################################################
+# Title:            Sandpit: Spotweb                                       #
+# Author(s):        CHAIR/Raneydazed                                    #
+# URL:              https://github.com/saltyorg/Sandpit                 #
+# --                                                                    #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+################################
+# Basics
+################################
+
+spotweb_name: spotweb
+
+################################
+# Paths
+################################
+
+spotweb_paths_folder: "{{ spotweb_name }}"
+spotweb_paths_location: "{{ server_appdata_path }}/{{ spotweb_paths_folder }}"
+spotweb_paths_folders_list:
+  - "{{ spotweb_paths_location }}"
+# spotweb_paths_config_location: "{{ spotweb_paths_location }}/www"
+
+################################
+# Web
+################################
+
+spotweb_web_subdomain: "{{ spotweb_name }}"
+spotweb_web_domain: "{{ user.domain }}"
+spotweb_web_port: "80"
+spotweb_web_url: "{{ 'https://' + spotweb_web_subdomain + '.' + spotweb_web_domain
+                  if (reverse_proxy_is_enabled)
+                  else 'http://localhost:' + spotweb_web_port }}"
+
+################################
+# DNS
+################################
+
+spotweb_dns_record: "{{ spotweb_web_subdomain }}"
+spotweb_dns_zone: "{{ spotweb_web_domain }}"
+spotweb_dns_proxy: "{{ dns.proxied }}"
+
+################################
+# Traefik
+################################
+
+spotweb_traefik_sso_middleware: "{{ traefik_default_sso_middleware }}"
+
+spotweb_traefik_middleware: "{{ traefik_default_middleware + ',' + spotweb_traefik_sso_middleware
+                             if (spotweb_traefik_sso_middleware | length > 0)
+                             else traefik_default_middleware }}"
+spotweb_traefik_certresolver: "{{ traefik_default_certresolver }}"
+spotweb_traefik_enabled: true
+
+################################
+# Docker
+################################
+
+# Container
+spotweb_docker_container: "{{ spotweb_name }}"
+
+# Image
+spotweb_docker_image_pull: true
+spotweb_docker_image_tag: "latest"
+spotweb_docker_image: "jgeusebroek/spotweb:{{ spotweb_docker_image_tag }}"
+
+# Ports
+spotweb_docker_ports_defaults:
+  - "{{ spotweb_web_port }}"
+spotweb_docker_ports_custom: []
+spotweb_docker_ports: "{{ spotweb_docker_ports_defaults
+                          + spotweb_docker_ports_custom
+                       if (not reverse_proxy_is_enabled)
+                       else spotweb_docker_ports_custom }}"
+
+# Envs
+spotweb_docker_envs_default:
+  PUID: "{{ uid }}"
+  PGID: "{{ gid }}"
+  TZ: "{{ tz }}"
+  SPOTWEB_DB_TYPE: "pdo_mysql"
+  SPOTWEB_DB_HOST: "mariadb"
+  SPOTWEB_DB_PORT: "3306"
+  SPOTWEB_DB_NAME: "{{ spotweb_name }}"
+  SPOTWEB_DB_USER: "root"
+  SPOTWEB_DB_PASS: "password321"
+  SPOTWEB_CRON_RETRIEVE: "* */2 * * *"
+spotweb_docker_envs_custom: {}
+spotweb_docker_envs: "{{ spotweb_docker_envs_default
+                         | combine(spotweb_docker_envs_custom) }}"
+
+# Commands
+spotweb_docker_commands_default: []
+spotweb_docker_commands_custom: []
+spotweb_docker_commands: "{{ spotweb_docker_commands_default
+                             + spotweb_docker_commands_custom }}"
+
+# Volumes
+spotweb_docker_volumes_default:
+  - "{{ spotweb_paths_location }}:/config"
+  # - "{{ spotweb_paths_location }}/www:/var/www/spotweb"
+spotweb_docker_volumes_custom: []
+spotweb_docker_volumes: "{{ spotweb_docker_volumes_default
+                            + spotweb_docker_volumes_custom }}"
+
+# Devices
+spotweb_docker_devices_default: []
+spotweb_docker_devices_custom: []
+spotweb_docker_devices: "{{ spotweb_docker_devices_default
+                            + spotweb_docker_devices_custom }}"
+
+# Hosts
+spotweb_docker_hosts_default: []
+spotweb_docker_hosts_custom: []
+spotweb_docker_hosts: "{{ docker_hosts_common
+                          | combine(spotweb_docker_hosts_default)
+                          | combine(spotweb_docker_hosts_custom) }}"
+
+# Labels
+spotweb_docker_labels_default: {}
+spotweb_docker_labels_custom: {}
+spotweb_docker_labels: "{{ docker_labels_common
+                           | combine(spotweb_docker_labels_default)
+                           | combine(spotweb_docker_labels_custom) }}"
+
+# Hostname
+spotweb_docker_hostname: "{{ spotweb_name }}"
+
+# Networks
+spotweb_docker_networks_alias: "{{ spotweb_name }}"
+spotweb_docker_networks_default: []
+spotweb_docker_networks_custom: []
+spotweb_docker_networks: "{{ docker_networks_common
+                             + spotweb_docker_networks_default
+                             + spotweb_docker_networks_custom }}"
+
+# Capabilities
+spotweb_docker_capabilities_default: []
+spotweb_docker_capabilities_custom: []
+spotweb_docker_capabilities: "{{ spotweb_docker_capabilities_default
+                                 + spotweb_docker_capabilities_custom }}"
+
+# Security Opts
+spotweb_docker_security_opts_default: []
+spotweb_docker_security_opts_custom: []
+spotweb_docker_security_opts: "{{ spotweb_docker_security_opts_default
+                                  + spotweb_docker_security_opts_custom }}"
+
+# Restart Policy
+spotweb_docker_restart_policy: unless-stopped
+
+# State
+spotweb_docker_state: started

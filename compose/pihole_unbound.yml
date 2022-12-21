@@ -1,0 +1,63 @@
+##########################################################################
+# Title:         Sandpit: pihole unbound                                 #
+# Author(s):     CHAIR/Raneydazed                                        #
+# URL:           https://github.com/saltyorg/Sandpit                     #
+# --                                                                     #
+##########################################################################
+#                   GNU General Public License v3.0                      #
+##########################################################################
+
+version: '3.0'
+
+services:
+  pihole:
+    container_name: pihole
+    image: cbcrowe/pihole-unbound:latest
+    hostname: ${PIHOLE_HOSTNAME}
+    domainname: ${PIHOLE_DOMAIN_NAME}
+    ports:
+      # # - 443:443/tcp
+      - 53:53/tcp
+      - 53:53/udp
+      # - ${PIHOLE_WEBPORT}:80/tcp #Allows use of different port to access pihole web interface when other docker containers use port 80
+      - 5335:5335/tcp # Uncomment to enable unbound access on local server
+      - 22/tcp # Uncomment to enable SSH
+    environment:
+      - FTLCONF_LOCAL_IPV4=${FTLCONF_LOCAL_IPV4}
+      - TZ=${TZ:-UTC}
+      - WEBPASSWORD=${PIHOLE_WEBPASSWORD}
+      - WEBTHEME=${PIHOLE_WEBTHEME}
+      - REV_SERVER=${REV_SERVER:-false}
+      - REV_SERVER_TARGET=${REV_SERVER_TARGET}
+      - REV_SERVER_DOMAIN=${REV_SERVER_DOMAIN}
+      - REV_SERVER_CIDR=${REV_SERVER_CIDR}
+      - PIHOLE_DNS_=127.0.0.1#5335
+      - DNSSEC="true"
+      - DNSMASQ_LISTENING=single
+      - PUID=1001
+      - PGID=1002
+    labels:
+      traefik.enable: true
+      traefik.http.routers.pihole-http.entrypoints: web
+      traefik.http.routers.pihole-http.middlewares: globalHeaders@file,redirect-to-https,gzip
+      traefik.http.routers.pihole-http.rule: Host(`pihole.domain.tld`)
+      traefik.http.routers.pihole-http.service: pihole
+      traefik.http.routers.pihole.entrypoints: websecure
+      traefik.http.routers.pihole.middlewares: globalHeaders@file,secureHeaders@file
+      traefik.http.routers.pihole.rule: Host(`pihole.domain.tld`)
+      traefik.http.routers.pihole.service: pihole
+      traefik.http.routers.pihole.tls.certresolver: cfdns
+      traefik.http.routers.pihole.tls.options: securetls@file
+      traefik.http.services.pihole.loadbalancer.server.port: 80
+    networks:
+      - saltbox
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - /opt/pihole:/etc/pihole:rw
+      - /opt/pihole/dnsmasq:/etc/dnsmasq.d:rw
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+networks:
+  saltbox:
+    external: true

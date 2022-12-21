@@ -1,0 +1,204 @@
+##########################################################################
+# Title:         Sandpit: standardnotes                                  #
+# Author(s):     CHAIR/Raneydazed                                        #
+# URL:           https://github.com/saltyorg/Sandpit                     #
+# --                                                                     #
+##########################################################################
+#                   GNU General Public License v3.0                      #
+##########################################################################
+
+version: '3.8'
+services:
+  syncing-server-js:
+    image: standardnotes/syncing-server-js
+    container_name: syncing-server-js-standalone
+    depends_on:
+      - db
+      - cache
+    entrypoint: [
+      "./packages/syncing-server/wait-for.sh", "db", "3306",
+      "./packages/syncing-server/wait-for.sh", "cache", "6379",
+      "./packages/syncing-server/docker/entrypoint.sh", "start-web"
+    ]
+    env_file: .env
+    environment:
+      PORT: 3000
+    restart: unless-stopped
+    networks:
+      - standardnotes_standalone
+
+  syncing-server-js-worker:
+    image: standardnotes/syncing-server-js
+    container_name: syncing-server-js-worker-standalone
+    depends_on:
+      - db
+      - cache
+      - syncing-server-js
+    entrypoint: [
+      "./packages/syncing-server/wait-for.sh", "db", "3306",
+      "./packages/syncing-server/wait-for.sh", "cache", "6379",
+      "./packages/syncing-server/wait-for.sh", "syncing-server-js", "3000",
+      "./packages/syncing-server/docker/entrypoint.sh", "start-worker"
+    ]
+    env_file: .env
+    environment:
+      PORT: 3000
+    restart: unless-stopped
+    networks:
+      - standardnotes_standalone
+
+  api-gateway:
+    image: standardnotes/api-gateway
+    container_name: api-gateway-standalone
+    hostname: api-gateway
+    depends_on:
+      - auth
+      - syncing-server-js
+    env_file: docker/api-gateway.env
+    ports:
+      - ${EXPOSED_PORT}:3000
+    environment:
+      PORT: 3000
+      AUTH_JWT_SECRET: '${AUTH_JWT_SECRET}'
+      REDIS_URL: '${REDIS_URL}'
+      FILES_SERVER_URL: '${FILES_SERVER_URL}'
+    entrypoint: [
+      "./packages/api-gateway/wait-for.sh", "auth", "3000",
+      "./packages/api-gateway/wait-for.sh", "syncing-server-js", "3000",
+      "./packages/api-gateway/wait-for.sh", "files", "3000",
+      "./packages/api-gateway/docker/entrypoint.sh", "start-web"
+    ]
+    restart: unless-stopped
+    networks:
+      - standardnotes_standalone
+      - saltbox
+    labels:
+      traefik.enable: true
+      traefik.http.routers.api-gateway-http.entrypoints: web
+      traefik.http.routers.api-gateway-http.middlewares: globalHeaders@file,redirect-to-https,gzip
+      traefik.http.routers.api-gateway-http.rule: Host(`api-gateway.domain.tld`)
+      traefik.http.routers.api-gateway-http.service: api-gateway
+      traefik.http.routers.api-gateway.entrypoints: websecure
+      traefik.http.routers.api-gateway.middlewares: globalHeaders@file,secureHeaders@file
+      traefik.http.routers.api-gateway.rule: Host(`api-gateway.domain.tld`)
+      traefik.http.routers.api-gateway.service: api-gateway
+      traefik.http.routers.api-gateway.tls.certresolver: cfdns
+      traefik.http.routers.api-gateway.tls.options: securetls@file
+      traefik.http.services.api-gateway.loadbalancer.server.port: 3000
+
+  auth:
+    image: standardnotes/auth
+    container_name: auth-standalone
+    depends_on:
+      - db
+      - cache
+      - syncing-server-js
+    entrypoint: [
+      "./packages/auth/wait-for.sh", "db", "3306",
+      "./packages/auth/wait-for.sh", "cache", "6379",
+      "./packages/auth/wait-for.sh", "syncing-server-js", "3000",
+      "./packages/auth/docker/entrypoint.sh", "start-web"
+    ]
+    env_file: docker/auth.env
+    environment:
+      PORT: 3000
+      DB_HOST: '${DB_HOST}'
+      DB_REPLICA_HOST: '${DB_REPLICA_HOST}'
+      DB_PORT: '${DB_PORT}'
+      DB_DATABASE: '${DB_DATABASE}'
+      DB_USERNAME: '${DB_USERNAME}'
+      DB_PASSWORD: '${DB_PASSWORD}'
+      DB_DEBUG_LEVEL: '${DB_DEBUG_LEVEL}'
+      DB_MIGRATIONS_PATH: '${DB_MIGRATIONS_PATH}'
+      REDIS_URL: '${REDIS_URL}'
+      AUTH_JWT_SECRET: '${AUTH_JWT_SECRET}'
+      VALET_TOKEN_SECRET: '${VALET_TOKEN_SECRET}'
+    restart: unless-stopped
+    networks:
+      - standardnotes_standalone
+
+  auth-worker:
+    image: standardnotes/auth
+    container_name: auth-worker-standalone
+    depends_on:
+      - db
+      - cache
+      - auth
+    entrypoint: [
+      "./packages/auth/wait-for.sh", "db", "3306",
+      "./packages/auth/wait-for.sh", "cache", "6379",
+      "./packages/auth/wait-for.sh", "auth", "3000",
+      "./packages/auth/docker/entrypoint.sh", "start-worker"
+    ]
+    env_file: docker/auth.env
+    environment:
+      PORT: 3000
+      DB_HOST: '${DB_HOST}'
+      DB_REPLICA_HOST: '${DB_REPLICA_HOST}'
+      DB_PORT: '${DB_PORT}'
+      DB_DATABASE: '${DB_DATABASE}'
+      DB_USERNAME: '${DB_USERNAME}'
+      DB_PASSWORD: '${DB_PASSWORD}'
+      DB_DEBUG_LEVEL: '${DB_DEBUG_LEVEL}'
+      DB_MIGRATIONS_PATH: '${DB_MIGRATIONS_PATH}'
+      REDIS_URL: '${REDIS_URL}'
+      AUTH_JWT_SECRET: '${AUTH_JWT_SECRET}'
+      VALET_TOKEN_SECRET: '${VALET_TOKEN_SECRET}'
+    restart: unless-stopped
+    networks:
+      - standardnotes_standalone
+
+  files:
+    image: standardnotes/files
+    container_name: files-standalone
+    entrypoint: [
+      "./packages/files/wait-for.sh", "db", "3306",
+      "./packages/files/wait-for.sh", "cache", "6379",
+      "./packages/files/docker/entrypoint.sh", "start-web"
+    ]
+    ports:
+      - ${EXPOSED_FILES_PORT}:3000
+    env_file: docker/files.env
+    environment:
+      FILE_UPLOAD_PATH: '${FILE_UPLOAD_PATH}'
+      VALET_TOKEN_SECRET: '${VALET_TOKEN_SECRET}'
+    volumes:
+      - ./${FILE_UPLOAD_PATH}:/var/www/${FILE_UPLOAD_PATH}
+    restart: unless-stopped
+    networks:
+      - standardnotes_standalone
+
+  db:
+    image: mysql:5.6
+    container_name: db-standalone
+    environment:
+      MYSQL_DATABASE: '${DB_DATABASE}'
+      MYSQL_USER: '${DB_USERNAME}'
+      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+    expose:
+      - 3306
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8 --collation-server=utf8_general_ci
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+      - ./data/import:/docker-entrypoint-initdb.d
+    networks:
+      - standardnotes_standalone
+
+  cache:
+    image: redis:6.0-alpine
+    container_name: cache-standalone
+    volumes:
+      - ./data/redis/:/data
+    expose:
+      - 6379
+    restart: unless-stopped
+    networks:
+      - standardnotes_standalone
+
+networks:
+  standardnotes_standalone:
+    name: standardnotes_standalone
+  saltbox:
+    external: true
