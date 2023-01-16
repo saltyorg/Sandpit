@@ -17,3 +17,4 @@
     - { role: spotweb, tags: ['spotweb'] }
     - { role: zigbee2mqtt, tags: ['zigbee2mqtt'] }
     - { role: mariadb-backup, tags: ['mariadb-backup']}
+    - { role: postgres-backup, tags: ['postgres-backup']}
