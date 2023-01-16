@@ -16,3 +16,4 @@
     - { role: flame, tags: ['flame'] }
     - { role: spotweb, tags: ['spotweb'] }
     - { role: zigbee2mqtt, tags: ['zigbee2mqtt'] }
+    - { role: mariadb-backup, tags: ['mariadb-backup']}
