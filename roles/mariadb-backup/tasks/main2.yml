@@ -11,4 +11,4 @@
     login_password: "{{ mariadb_docker_env_password }}"
     state: dump
     name: all
-    target: /opt/db-backup/{{ mariadb_name }}.sql.gz
+    target: /opt/db-backup/{{ mariadb_name }}_{{ ansible_date_time.iso8601_basic_short }}.sql.gz
