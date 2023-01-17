@@ -1,14 +1,8 @@
----
-- name: Install mysql-client dependency
-  ansible.builtin.apt:
-    name: "mysql-client"
-    state: present
-
-- name: Dump all mariadb databases
-  community.mysql.mysql_db:
-    login_host: "mariadb"
-    login_user: "{{ mariadb_docker_env_user }}"
-    login_password: "{{ mariadb_docker_env_password }}"
-    state: dump
-    name: all
-    target: /opt/db-backup/mariadb.sql.gz
+- name: "Execute MariaDB roles"
+  ansible.builtin.include_tasks: main2.yml
+  vars:
+    mariadb_original_name: "{{ role }}"
+    mariadb_name: "{{ role if not '-' in role else (role | replace('-', '_')) }}"
+  with_items: "{{ mariadb_instances }}"
+  loop_control:
+    loop_var: role

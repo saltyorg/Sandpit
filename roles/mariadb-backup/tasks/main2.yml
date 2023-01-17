@@ -1,0 +1,14 @@
+---
+- name: Install mysql-client dependency
+  ansible.builtin.apt:
+    name: "mysql-client"
+    state: present
+
+- name: Dump all mariadb databases
+  community.mysql.mysql_db:
+    login_host: "{{ mariadb_name }}"
+    login_user: "{{ mariadb_docker_env_user }}"
+    login_password: "{{ mariadb_docker_env_password }}"
+    state: dump
+    name: all
+    target: /opt/db-backup/{{ mariadb_name }}.sql.gz
