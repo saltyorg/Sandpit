@@ -1,28 +1,8 @@
----
-- name: Install psycopg2 dependency
-  ansible.builtin.pip:
-    name: "psycopg2-binary"
-
-- name: Install postgresql-client dependency
-  ansible.builtin.apt:
-    name: "postgresql-client"
-    state: present
-
-- name: Get list of postgres databases
-  community.postgresql.postgresql_info:
-    login_host: "postgres"
-    login_user: "{{ postgres_docker_env_user }}"
-    login_password: "{{ postgres_docker_env_password }}"
-    filter:
-    - "databases"
-  register: postgres_databases
-
-- name: Dump all postgres databases
-  community.postgresql.postgresql_db:
-    login_host: "postgres"
-    login_user: "{{ postgres_docker_env_user }}"
-    login_password: "{{ postgres_docker_env_password }}"
-    name: "{{ item }}"
-    state: "dump"
-    target: "/opt/db-backup/postgres/{{ item }}.sql.gz"
-  with_items: "{{ postgres_databases.databases }}"
+- name: "Execute PostgreSQL roles"
+  ansible.builtin.include_tasks: main2.yml
+  vars:
+    postgres_original_name: "{{ role }}"
+    postgres_name: "{{ role if not '-' in role else (role | replace('-', '_')) }}"
+  with_items: "{{ postgres_instances }}"
+  loop_control:
+    loop_var: role
