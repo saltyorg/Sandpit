@@ -19,10 +19,10 @@
 
 - name: Dump all postgres databases
   community.postgresql.postgresql_db:
-    login_host: "{{ postgres_name }"
+    login_host: "{{ postgres_name }}"
     login_user: "{{ postgres_docker_env_user }}"
     login_password: "{{ postgres_docker_env_password }}"
     name: "{{ item }}"
     state: "dump"
-    target: "/opt/db-backup/{{ postgres_name }}/{{ item }}.sql.gz"
+    target: "/opt/db-backup/{{ postgres_name }}/{{ item }}_{{ ansible_date_time.iso8601_basic_short }}.sql.gz"
   with_items: "{{ postgres_databases.databases }}"
