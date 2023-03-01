@@ -15,3 +15,4 @@ services:
     network_mode: saltbox
     labels:
       com.github.saltbox.saltbox_managed: "true"
+      
