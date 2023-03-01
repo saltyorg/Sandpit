@@ -1,0 +1,21 @@
+version: "2.1"
+services:
+  cross-seed:
+    container_name: cross-seed
+    image: crossseed/cross-seed:latest
+    command: daemon
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1001
+    volumes:
+      - /opt/cross-seed:/config
+      - /opt/cross-seed/cross-seeds:/cross-seeds
+      - /opt/qbittorrent/qBittorrent/BT_backup:/torrents:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "2468:2468"
+    network_mode: saltbox
+    labels:
+      com.github.saltbox.saltbox_managed: "true"
+    user: 1000:1001
