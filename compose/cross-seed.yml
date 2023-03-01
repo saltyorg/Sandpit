@@ -5,9 +5,6 @@ services:
     image: crossseed/cross-seed:latest
     command: daemon
     restart: unless-stopped
-    environment:
-      - PUID=1000
-      - PGID=1001
     volumes:
       - /opt/cross-seed:/config
       - /opt/cross-seed/cross-seeds:/cross-seeds
@@ -18,4 +15,3 @@ services:
     network_mode: saltbox
     labels:
       com.github.saltbox.saltbox_managed: "true"
-    user: 1000:1001
