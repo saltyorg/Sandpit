@@ -45,8 +45,10 @@ zigbee2mqtt_dns_proxy: "{{ dns.proxied }}"
 # Traefik
 ################################
 
-zigbee2mqtt_traefik_middleware_default: "{{ traefik_default_middleware }}"
-zigbee2mqtt_traefik_middleware: "{{ zigbee2mqtt_traefik_middleware_default }}"
+zigbee2mqtt_traefik_sso_middleware: "{{ traefik_default_sso_middleware }}"
+zigbee2mqtt_traefik_middleware: "{{ traefik_default_middleware + ',' + zigbee2mqtt_traefik_sso_middleware
+                                 if (zigbee2mqtt_traefik_sso_middleware | length > 0)
+                                 else traefik_default_middleware }}"
 zigbee2mqtt_traefik_certresolver: "{{ traefik_default_certresolver }}"
 zigbee2mqtt_traefik_enabled: true
 zigbee2mqtt_traefik_api_enabled: true
@@ -64,14 +66,6 @@ zigbee2mqtt_docker_image_pull: true
 zigbee2mqtt_docker_image_tag: "latest"
 zigbee2mqtt_docker_image: "koenkk/zigbee2mqtt:{{ zigbee2mqtt_docker_image_tag }}"
 
-# Healthcheck
-# zigbee2mqtt_docker_healthcheck:
-#   test: ["CMD", "curl", "--fail", "http://localhost:{{ zigbee2mqtt_web_port }}"]
-#   interval: 10s
-#   timeout: 5s
-#   retries: 10
-#   start_period: 10s
-
 # Ports
 zigbee2mqtt_docker_ports_defaults:
   - "{{ zigbee2mqtt_web_port }}"
@@ -84,8 +78,6 @@ zigbee2mqtt_docker_ports: "{{ zigbee2mqtt_docker_ports_defaults
 # Envs
 zigbee2mqtt_docker_envs_default:
   TZ: "{{ tz }}"
-  PUID: "{{ uid }}"
-  PGID: "{{ gid }}"
 zigbee2mqtt_docker_envs_custom: {}
 zigbee2mqtt_docker_envs: "{{ zigbee2mqtt_docker_envs_default
                              | combine(zigbee2mqtt_docker_envs_custom) }}"
@@ -97,7 +89,7 @@ zigbee2mqtt_docker_commands: "{{ zigbee2mqtt_docker_commands_default
                                  + zigbee2mqtt_docker_commands_custom }}"
 
 # Extended Privileges
-zigbee2mqtt_docker_privileged: "yes"
+# zigbee2mqtt_docker_privileged: "yes"
 
 # Volumes
 zigbee2mqtt_docker_volumes_default:
@@ -110,6 +102,7 @@ zigbee2mqtt_docker_volumes: "{{ zigbee2mqtt_docker_volumes_default
 # Devices
 zigbee2mqtt_docker_devices_default:
   - "/dev/ttyUSB0:/dev/ttyUSB0"
+  - "/dev/ttyUSB1:/dev/ttyUSB1"
 zigbee2mqtt_docker_devices_custom: []
 zigbee2mqtt_docker_devices: "{{ zigbee2mqtt_docker_devices_default
                                 + zigbee2mqtt_docker_devices_custom }}"
@@ -156,3 +149,9 @@ zigbee2mqtt_docker_restart_policy: unless-stopped
 
 # State
 zigbee2mqtt_docker_state: started
+
+# User
+zigbee2mqtt_docker_user: "{{ uid }}:{{ gid }}"
+
+zigbee2mqtt_docker_groups: 
+  - "dialout"
