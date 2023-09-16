@@ -14,6 +14,7 @@
     - { role: helloworld, tags: ['helloworld'] }
     - { role: crowdsec, tags: ['crowdsec'] }
     - { role: flame, tags: ['flame'] }
+    - { role: maintainerr, tags: ['maintainerr'] }
     - { role: spotweb, tags: ['spotweb'] }
     - { role: zigbee2mqtt, tags: ['zigbee2mqtt'] }
     - { role: mariadb-backup, tags: ['mariadb-backup']}
