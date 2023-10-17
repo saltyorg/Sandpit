@@ -17,7 +17,7 @@ services:
       - ${UPLOAD_LOCATION}:/usr/src/app/upload
       - /etc/localtime:/etc/localtime:ro
     env_file:
-      - .env
+      - immich.env
     depends_on:
       - redis
       - database
@@ -43,7 +43,7 @@ services:
       - ${UPLOAD_LOCATION}:/usr/src/app/upload
       - /etc/localtime:/etc/localtime:ro
     env_file:
-      - .env
+      - immich.env
     depends_on:
       - redis
       - database
@@ -64,7 +64,7 @@ services:
     volumes:
       - /opt/immich/model-cache:/cache
     env_file:
-      - .env
+      - immich.env
     restart: always
 
   immich-web:
@@ -79,7 +79,7 @@ services:
     networks:
       - saltbox
     env_file:
-      - .env
+      - immich.env
     restart: always
 
   typesense:
@@ -123,7 +123,7 @@ services:
     networks:
       - saltbox
     env_file:
-      - .env
+      - immich.env
     environment:
       PUID: 1000
       PGID: 1001
