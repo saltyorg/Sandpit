@@ -2,101 +2,170 @@ version: "3.8"
 
 services:
   immich-server:
-    image: altran1502/immich-server:release
-    entrypoint: ["/bin/sh", "./start-server.sh"]
+    container_name: immich_server
+    hostname: immich_server
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    labels:
+      com.github.saltbox.saltbox_managed: true
+    environment:
+      - PUID=1000
+      - PGID=1001
+    networks:
+      - saltbox
+    command: ["start.sh", "immich"]
     volumes:
       - ${UPLOAD_LOCATION}:/usr/src/app/upload
+      - /etc/localtime:/etc/localtime:ro
     env_file:
-      - .env
-    environment:
-      - NODE_ENV=production
+      - immich.env
     depends_on:
       - redis
       - database
+      - typesense
     restart: always
 
   immich-microservices:
-    image: altran1502/immich-server:release
-    entrypoint: ["/bin/sh", "./start-microservices.sh"]
+    container_name: immich_microservices
+    hostname: immich_microservices
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    labels:
+      com.github.saltbox.saltbox_managed: true
+    environment:
+      - PUID=1000
+      - PGID=1001
+    networks:
+      - saltbox
+    extends:
+      file: hwaccel.yml
+      service: hwaccel
+    command: ["start.sh", "microservices"]
     volumes:
       - ${UPLOAD_LOCATION}:/usr/src/app/upload
+      - /etc/localtime:/etc/localtime:ro
     env_file:
-      - .env
-    environment:
-      - NODE_ENV=production
+      - immich.env
     depends_on:
       - redis
       - database
+      - typesense
     restart: always
 
   immich-machine-learning:
-    image: altran1502/immich-machine-learning:release
-    entrypoint: ["/bin/sh", "./entrypoint.sh"]
-    volumes:
-      - ${UPLOAD_LOCATION}:/usr/src/app/upload
-    env_file:
-      - .env
+    container_name: immich_machine_learning
+    hostname: immich_machine_learning
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+    labels:
+      com.github.saltbox.saltbox_managed: true
     environment:
-      - NODE_ENV=production
-    depends_on:
-      - database
+      - PUID=1000
+      - PGID=1001
+    networks:
+      - saltbox
+    volumes:
+      - /opt/immich/model-cache:/cache
+    env_file:
+      - immich.env
     restart: always
 
   immich-web:
-    image: altran1502/immich-web:release
-    entrypoint: ["/bin/sh", "./entrypoint.sh"]
+    container_name: immich_web
+    hostname: immich_web
+    image: ghcr.io/immich-app/immich-web:${IMMICH_VERSION:-release}
+    labels:
+      com.github.saltbox.saltbox_managed: true
+    environment:
+      - PUID=1000
+      - PGID=1001
+    networks:
+      - saltbox
     env_file:
-      - .env
+      - immich.env
+    restart: always
+
+  typesense:
+    container_name: immich_typesense
+    hostname: immich_typesense
+    image: typesense/typesense:0.24.1@sha256:9bcff2b829f12074426ca044b56160ca9d777a0c488303469143dd9f8259d4dd
+    labels:
+      com.github.saltbox.saltbox_managed: true
+    networks:
+      - saltbox
+    environment:
+      - PUID=1000
+      - PGID=1001
+      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY}
+      - TYPESENSE_DATA_DIR=/data
+      # remove this to get debug messages
+      - GLOG_minloglevel=1
+    volumes:
+      - /opt/immich/tsdata:/data
     restart: always
 
   redis:
     container_name: immich_redis
-    image: redis:6.2
+    hostname: immich_redis
+    image: redis:6.2-alpine@sha256:70a7a5b641117670beae0d80658430853896b5ef269ccf00d1827427e3263fa3
+    labels:
+      com.github.saltbox.saltbox_managed: true
+    environment:
+      - PUID=1000
+      - PGID=1001
+    networks:
+      - saltbox
     restart: always
 
   database:
     container_name: immich_postgres
-    image: postgres:14
+    hostname: immich_postgres
+    image: postgres:14-alpine@sha256:28407a9961e76f2d285dc6991e8e48893503cc3836a4755bbc2d40bcc272a441
+    labels:
+      com.github.saltbox.saltbox_managed: true
+    networks:
+      - saltbox
     env_file:
-      - .env
+      - immich.env
     environment:
+      PUID: 1000
+      PGID: 1001
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_DB: ${DB_DATABASE_NAME}
-      PG_DATA: /var/lib/postgresql/data
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - /opt/immich/pgdata:/var/lib/postgresql/data
     restart: always
 
   immich-proxy:
     container_name: immich_proxy
-    image: altran1502/immich-proxy:release
+    hostname: immich_proxy
+    image: ghcr.io/immich-app/immich-proxy:${IMMICH_VERSION:-release}
+    labels:
+      com.github.saltbox.saltbox_managed: true
+    environment:
+      - PUID=1000
+      - PGID=1001
     networks:
-      - default
       - saltbox
     labels:
+      com.github.saltbox.saltbox_managed: true
       diun.enable: true
       traefik.enable: true
       traefik.docker.network: saltbox
       traefik.http.routers.immich-http.entrypoints: web
       traefik.http.routers.immich-http.middlewares: globalHeaders@file,redirect-to-https,gzip
-      traefik.http.routers.immich-http.rule: Host(`immich.TLD.COM`)
+      traefik.http.routers.immich-http.rule: Host(`immich.APPNAME.TLD`)
       traefik.http.routers.immich-http.service: immich
       traefik.http.routers.immich.entrypoints: websecure
       traefik.http.routers.immich.middlewares: globalHeaders@file,secureHeaders@file
-      traefik.http.routers.immich.rule: Host(`immich.TLD.COM`)
+      traefik.http.routers.immich.rule: Host(`immich.APPNAME.TLD`)
       traefik.http.routers.immich.service: immich
       traefik.http.routers.immich.tls.certresolver: cfdns
       traefik.http.routers.immich.tls.options: securetls@file
       traefik.http.services.immich.loadbalancer.server.port: 8080
-    logging:
-      driver: none
     depends_on:
       - immich-server
+      - immich-web
     restart: always
 
-volumes:
-  pgdata:
 networks:
   saltbox:
     external: true
