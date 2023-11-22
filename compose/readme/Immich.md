@@ -1,5 +1,7 @@
 # Immich
 
+> **NOTE**: as of version 0.88.*, Immich no longer uses the immich web or immich proxy container. Immich server now covers those areas. See [#5086](https://github.com/immich-app/immich/discussions/5086) for more info.
+
 You will need to create an A record in cloudflare or whomever your provider is for this to resolve, or alternatively, run the ddns role salty made, to automatically create the records in cloudflare. (`sb install ddns`) It works similarly to the regular roles, and will add a record for you for docker compose files. Make sure to edit the `labels` section of the compose file with your domain and top level domain. (IE `immich.APPNAME.TLD) Then correct any of the other things that may be different for you, which I'll list:
 
 1. User mapping:
