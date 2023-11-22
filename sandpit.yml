@@ -14,6 +14,10 @@
     - { role: helloworld, tags: ['helloworld'] }
     - { role: crowdsec, tags: ['crowdsec'] }
     - { role: flame, tags: ['flame'] }
+    - { role: immich, tags: ['immich'] }
+    - { role: immich_microservices, tags: ['immich_microservices'] }
+    - { role: immich_machine_learning, tags: ['immich_machine_learning'] }
+    - { role: immich_typesense, tags: ['immich_typesense'] }
     - { role: maintainerr, tags: ['maintainerr'] }
     - { role: spotweb, tags: ['spotweb'] }
     - { role: zigbee2mqtt, tags: ['zigbee2mqtt'] }
