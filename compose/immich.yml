@@ -6,7 +6,19 @@ services:
     hostname: immich_server
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
     labels:
-      com.github.saltbox.saltbox_managed: true
+      com.github.saltbox.saltbox_managed: true 
+      traefik.enable: true 
+      traefik.http.routers.immich-http.entrypoints: web 
+      traefik.http.routers.immich-http.middlewares: globalHeaders@file,redirect-to-https@docker,cloudflarewarp@docker 
+      traefik.http.routers.immich-http.rule: Host(`immich.domain.com`) 
+      traefik.http.routers.immich-http.service: immich 
+      traefik.http.routers.immich.entrypoints: websecure 
+      traefik.http.routers.immich.middlewares: globalHeaders@file,secureHeaders@file,cloudflarewarp@docker 
+      traefik.http.routers.immich.rule: Host(`immich.domain.com`) 
+      traefik.http.routers.immich.service: immich 
+      traefik.http.routers.immich.tls.certresolver: cfdns 
+      traefik.http.routers.immich.tls.options: securetls@file 
+      traefik.http.services.immich.loadbalancer.server.port: 3001
     environment:
       - PUID=1000
       - PGID=1001
@@ -22,6 +34,7 @@ services:
       - redis
       - database
       - typesense
+    user: 1000:1001
     restart: always
 
   immich-microservices:
@@ -48,6 +61,7 @@ services:
       - redis
       - database
       - typesense
+    user: 1000:1001
     restart: always
 
   immich-machine-learning:
@@ -65,22 +79,23 @@ services:
       - /opt/immich/model-cache:/cache
     env_file:
       - immich.env
+    user: 1000:1001
     restart: always
 
-  immich-web:
-    container_name: immich_web
-    hostname: immich_web
-    image: ghcr.io/immich-app/immich-web:${IMMICH_VERSION:-release}
-    labels:
-      com.github.saltbox.saltbox_managed: true
-    environment:
-      - PUID=1000
-      - PGID=1001
-    networks:
-      - saltbox
-    env_file:
-      - immich.env
-    restart: always
+  # immich-web:
+  #   container_name: immich_web
+  #   hostname: immich_web
+  #   image: ghcr.io/immich-app/immich-web:${IMMICH_VERSION:-release}
+  #   labels:
+  #     com.github.saltbox.saltbox_managed: true
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1001
+  #   networks:
+  #     - saltbox
+  #   env_file:
+  #     - immich.env
+  #   restart: always
 
   typesense:
     container_name: immich_typesense
@@ -99,6 +114,7 @@ services:
       - GLOG_minloglevel=1
     volumes:
       - /opt/immich/tsdata:/data
+    user: 1000:1001
     restart: always
 
   redis:
@@ -112,6 +128,7 @@ services:
       - PGID=1001
     networks:
       - saltbox
+    user: 1000:1001
     restart: always
 
   database:
@@ -125,46 +142,45 @@ services:
     env_file:
       - immich.env
     environment:
-      PUID: 1000
-      PGID: 1001
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_DB: ${DB_DATABASE_NAME}
     volumes:
       - /opt/immich/pgdata:/var/lib/postgresql/data
+    user: 1000:1001
     restart: always
 
-  immich-proxy:
-    container_name: immich_proxy
-    hostname: immich_proxy
-    image: ghcr.io/immich-app/immich-proxy:${IMMICH_VERSION:-release}
-    labels:
-      com.github.saltbox.saltbox_managed: true
-    environment:
-      - PUID=1000
-      - PGID=1001
-    networks:
-      - saltbox
-    labels:
-      com.github.saltbox.saltbox_managed: true
-      diun.enable: true
-      traefik.enable: true
-      traefik.docker.network: saltbox
-      traefik.http.routers.immich-http.entrypoints: web
-      traefik.http.routers.immich-http.middlewares: globalHeaders@file,redirect-to-https,gzip
-      traefik.http.routers.immich-http.rule: Host(`immich.APPNAME.TLD`)
-      traefik.http.routers.immich-http.service: immich
-      traefik.http.routers.immich.entrypoints: websecure
-      traefik.http.routers.immich.middlewares: globalHeaders@file,secureHeaders@file
-      traefik.http.routers.immich.rule: Host(`immich.APPNAME.TLD`)
-      traefik.http.routers.immich.service: immich
-      traefik.http.routers.immich.tls.certresolver: cfdns
-      traefik.http.routers.immich.tls.options: securetls@file
-      traefik.http.services.immich.loadbalancer.server.port: 8080
-    depends_on:
-      - immich-server
-      - immich-web
-    restart: always
+  # immich-proxy:
+  #   container_name: immich_proxy
+  #   hostname: immich_proxy
+  #   image: ghcr.io/immich-app/immich-proxy:${IMMICH_VERSION:-release}
+  #   labels:
+  #     com.github.saltbox.saltbox_managed: true
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1001
+  #   networks:
+  #     - saltbox
+  #   labels:
+  #     com.github.saltbox.saltbox_managed: true
+  #     diun.enable: true
+  #     traefik.enable: true
+  #     traefik.docker.network: saltbox
+  #     traefik.http.routers.immich-http.entrypoints: web
+  #     traefik.http.routers.immich-http.middlewares: globalHeaders@file,redirect-to-https,gzip
+  #     traefik.http.routers.immich-http.rule: Host(`immich.immich.TLD`)
+  #     traefik.http.routers.immich-http.service: immich
+  #     traefik.http.routers.immich.entrypoints: websecure
+  #     traefik.http.routers.immich.middlewares: globalHeaders@file,secureHeaders@file
+  #     traefik.http.routers.immich.rule: Host(`immich.immich.TLD`)
+  #     traefik.http.routers.immich.service: immich
+  #     traefik.http.routers.immich.tls.certresolver: cfdns
+  #     traefik.http.routers.immich.tls.options: securetls@file
+  #     traefik.http.services.immich.loadbalancer.server.port: 8080
+  #   depends_on:
+  #     - immich-server
+  #     - immich-web
+  #   restart: always
 
 networks:
   saltbox:
