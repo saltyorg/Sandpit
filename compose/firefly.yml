@@ -2,7 +2,7 @@ version: '3.8'
 services:
   firefly:
     container_name: firefly
-    env_file: .env
+    env_file: firefly.env
     hostname: firefly
     image: fireflyiii/core:latest
     labels:
@@ -58,7 +58,7 @@ services:
       traefik.http.routers.importer.middlewares: globalHeaders@file,secureHeaders@file,cloudflarewarp@docker,authelia@docker
       traefik.http.services.importer-http.loadbalancer.server.port: 8080
       traefik.http.services.importer.loadbalancer.server.port: 8080
-    env_file: .importer.env
+    env_file: firefly.importer.env
     volumes:
       - /opt/firefly:/var/www/html/storage/upload
       - /etc/localtime:/etc/localtime:ro
