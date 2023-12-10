@@ -1,0 +1,81 @@
+version: '3.8'
+services:
+  firefly:
+    container_name: firefly
+    env_file: .env
+    hostname: firefly
+    image: fireflyiii/core:latest
+    labels:
+      com.github.saltbox.saltbox_managed: true
+      diun.enable: true
+      autoheal: true
+      autoheal.stop.timeout: 10
+      traefik.enable: true
+      traefik.http.routers.firefly-http.entrypoints: web
+      traefik.http.routers.firefly-http.service: firefly-http
+      traefik.http.routers.firefly-http.rule: Host(`firefly.domain.tld`)
+      traefik.http.routers.firefly-http.priority: 20
+      traefik.http.routers.firefly-http.middlewares: globalHeaders@file,redirect-to-https@docker,cloudflarewarp@docker,authelia@docker
+      traefik.http.routers.firefly.entrypoints: websecure
+      traefik.http.routers.firefly.service: firefly
+      traefik.http.routers.firefly.rule: Host(`firefly.domain.tld`)
+      traefik.http.routers.firefly.priority: 20
+      traefik.http.routers.firefly.tls.certresolver: cfdns
+      traefik.http.routers.firefly.tls.options: securetls@file
+      traefik.http.routers.firefly.middlewares: globalHeaders@file,secureHeaders@file,cloudflarewarp@docker,authelia@docker
+      traefik.http.services.firefly-http.loadbalancer.server.port: 8080
+      traefik.http.services.firefly.loadbalancer.server.port: 8080
+    networks:
+      - saltbox
+    restart: unless-stopped
+    volumes:
+      - /opt/firefly:/var/www/html/storage/upload
+      - /etc/localtime:/etc/localtime:ro
+  importer:
+    image: fireflyiii/data-importer:latest
+    hostname: importer
+    restart: always
+    container_name: importer
+    networks:
+      - saltbox
+    labels:
+      com.github.saltbox.saltbox_managed: true
+      diun.enable: true
+      autoheal: true
+      autoheal.stop.timeout: 10
+      traefik.enable: true
+      traefik.http.routers.importer-http.entrypoints: web
+      traefik.http.routers.importer-http.service: importer-http
+      traefik.http.routers.importer-http.rule: Host(`importer.domain.tld`)
+      traefik.http.routers.importer-http.priority: 20
+      traefik.http.routers.importer-http.middlewares: globalHeaders@file,redirect-to-https@docker,cloudflarewarp@docker,authelia@docker
+      traefik.http.routers.importer.entrypoints: websecure
+      traefik.http.routers.importer.service: importer
+      traefik.http.routers.importer.rule: Host(`importer.domain.tld`)
+      traefik.http.routers.importer.priority: 20
+      traefik.http.routers.importer.tls.certresolver: cfdns
+      traefik.http.routers.importer.tls.options: securetls@file
+      traefik.http.routers.importer.middlewares: globalHeaders@file,secureHeaders@file,cloudflarewarp@docker,authelia@docker
+      traefik.http.services.importer-http.loadbalancer.server.port: 8080
+      traefik.http.services.importer.loadbalancer.server.port: 8080
+    env_file: .importer.env
+    volumes:
+      - /opt/firefly:/var/www/html/storage/upload
+      - /etc/localtime:/etc/localtime:ro
+  cron:
+    #
+    # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable and replace REPLACEME below
+    # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
+    # I suggest using this command; "openssl rand -hex 16" then add it to your .env and the "command" line below
+    #
+    image: alpine
+    restart: always
+    container_name: cron
+    hostname: cron
+    command: sh -c "echo \"0 3 * * * wget -qO- http://firefly:8080/api/v1/cron/REPLACEME\" | crontab - && crond -f -L /dev/stdout"
+    networks:
+      - saltbox
+
+networks:
+  saltbox:
+    external: true
