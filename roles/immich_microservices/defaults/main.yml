@@ -21,7 +21,6 @@ immich_microservices_paths_folder: "{{ immich_microservices_name }}"
 immich_microservices_paths_location: "{{ server_appdata_path }}/{{ immich_microservices_paths_folder }}"
 immich_microservices_paths_folders_list:
   - "{{ immich_microservices_paths_location }}"
-  - "{{ immich_microservices_paths_location }}/.dump"
   - "/mnt/local/Media/Photos"
 
 ################################
