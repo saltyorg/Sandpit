@@ -1,5 +1,5 @@
 #########################################################################
-# Title:            Sandpit: zigbee2mqtt                                #
+# Title:            Sandpit: Zigbee2mqtt                                #
 # Author(s):        CHAIR/Raneydazed                                    #
 # URL:              https://github.com/saltyorg/Sandpit                 #
 # --                                                                    #
@@ -29,9 +29,9 @@ zigbee2mqtt_paths_folders_list:
 zigbee2mqtt_web_subdomain: "{{ zigbee2mqtt_name }}"
 zigbee2mqtt_web_domain: "{{ user.domain }}"
 zigbee2mqtt_web_port: "8080"
-zigbee2mqtt_web_url: "{{ 'https://' + zigbee2mqtt_web_subdomain + '.' + zigbee2mqtt_web_domain
-                      if (reverse_proxy_is_enabled)
-                      else 'http://localhost:' + zigbee2mqtt_web_port }}"
+zigbee2mqtt_web_url: "{{ 'https://' + (zigbee2mqtt_web_subdomain + '.' + zigbee2mqtt_web_domain
+                      if (zigbee2mqtt_web_subdomain | length > 0)
+                      else zigbee2mqtt_web_domain) }}"
 
 ################################
 # DNS
@@ -46,13 +46,12 @@ zigbee2mqtt_dns_proxy: "{{ dns.proxied }}"
 ################################
 
 zigbee2mqtt_traefik_sso_middleware: "{{ traefik_default_sso_middleware }}"
-zigbee2mqtt_traefik_middleware: "{{ traefik_default_middleware + ',' + zigbee2mqtt_traefik_sso_middleware
-                                 if (zigbee2mqtt_traefik_sso_middleware | length > 0)
-                                 else traefik_default_middleware }}"
+zigbee2mqtt_traefik_middleware_default: "{{ traefik_default_middleware }}"
 zigbee2mqtt_traefik_certresolver: "{{ traefik_default_certresolver }}"
+zigbee2mqtt_traefik_middleware_custom: ""
 zigbee2mqtt_traefik_enabled: true
-zigbee2mqtt_traefik_api_enabled: true
-zigbee2mqtt_traefik_api_endpoint: "`/api`"
+zigbee2mqtt_traefik_api_enabled: false
+zigbee2mqtt_traefik_api_endpoint: ""
 
 ################################
 # Docker
@@ -88,12 +87,10 @@ zigbee2mqtt_docker_commands_custom: []
 zigbee2mqtt_docker_commands: "{{ zigbee2mqtt_docker_commands_default
                                  + zigbee2mqtt_docker_commands_custom }}"
 
-# Extended Privileges
-# zigbee2mqtt_docker_privileged: "yes"
-
 # Volumes
 zigbee2mqtt_docker_volumes_default:
   - "{{ zigbee2mqtt_paths_location }}:/app/data"
+  - "/etc/localtime:/etc/localtime:ro"
   - "/run/udev:/run/udev:ro"
 zigbee2mqtt_docker_volumes_custom: []
 zigbee2mqtt_docker_volumes: "{{ zigbee2mqtt_docker_volumes_default
@@ -102,7 +99,6 @@ zigbee2mqtt_docker_volumes: "{{ zigbee2mqtt_docker_volumes_default
 # Devices
 zigbee2mqtt_docker_devices_default:
   - "/dev/ttyUSB0:/dev/ttyUSB0"
-  - "/dev/ttyUSB1:/dev/ttyUSB1"
 zigbee2mqtt_docker_devices_custom: []
 zigbee2mqtt_docker_devices: "{{ zigbee2mqtt_docker_devices_default
                                 + zigbee2mqtt_docker_devices_custom }}"
@@ -153,5 +149,6 @@ zigbee2mqtt_docker_state: started
 # User
 zigbee2mqtt_docker_user: "{{ uid }}:{{ gid }}"
 
-zigbee2mqtt_docker_groups: 
+# Group Add
+zigbee2mqtt_docker_groups:
   - "dialout"
