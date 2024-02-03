@@ -28,7 +28,7 @@ maintainerr_paths_folders_list:
 
 maintainerr_web_subdomain: "{{ maintainerr_name }}"
 maintainerr_web_domain: "{{ user.domain }}"
-maintainerr_web_port: "80"
+maintainerr_web_port: "6246"
 maintainerr_web_url: "{{ 'https://' + (maintainerr_web_subdomain + '.' + maintainerr_web_domain
                       if (maintainerr_web_subdomain | length > 0)
                       else maintainerr_web_domain) }}"
@@ -139,3 +139,6 @@ maintainerr_docker_restart_policy: unless-stopped
 
 # State
 maintainerr_docker_state: started
+
+# User
+maintainerr_docker_user: "{{ uid }}:{{ gid }}"
