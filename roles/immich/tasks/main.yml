@@ -26,10 +26,6 @@
     postgres_paths_folder: "{{ immich_name }}"
     postgres_paths_location: "{{ server_appdata_path }}/{{ postgres_paths_folder }}/postgres"
 
-- name: "Generate Secret Key for typesense"
-  ansible.builtin.shell: "openssl rand -base64 45"
-  register: immich_typesense_secret_key
-
 - name: Import Immich Machine Learning Role
   ansible.builtin.include_role:
     name: immich_machine_learning
@@ -46,22 +42,6 @@
       - "{{ immich_machine_learning_paths_location }}/.map:/map"
       - "{{ immich_machine_learning_paths_location }}/cache:/cache"
 
-- name: Import Immich Typesense Role
-  ansible.builtin.include_role:
-    name: immich_typesense
-  vars:
-    immich_typesense_name: "{{ immich_name }}_typesense"
-    immich_typesense_paths_folder: "{{ immich_name }}"
-    immich_typesense_paths_location: "{{ server_appdata_path }}/{{ immich_typesense_paths_folder }}/typesense"
-    immich_typesense_docker_image_tag: "0.25.1"
-    immich_typesense_docker_envs_default:
-      TYPESENSE_DATA_DIR: "/data"
-      TYPESENSE_API_KEY: "{{ immich_typesense_secret_key.stdout }}"
-      GLOG_minloglevel: "1"
-      TZ: "America/Chicago"
-    immich_typesense_docker_volumes_default:
-      - "{{ immich_typesense_paths_location }}:/data"
-
 - name: Import Immich Microservices Role
   ansible.builtin.include_role:
     name: immich_microservices
@@ -76,14 +56,10 @@
       DB_PASSWORD: "{{ postgres_docker_env_password }}"
       DB_DATABASE_NAME: "{{ immich_name }}"
       REDIS_HOSTNAME: "{{ immich_name }}_redis"
-      TYPESENSE_HOST: "{{ immich_typesense_name }}"
-      TYPESENSE_API_KEY: "{{ immich_typesense_secret_key.stdout }}"
       UPLOAD_LOCATION: "/mnt/unionfs/Media/Photos"
-      TYPESENSE_ENABLED: "true"
       TZ: "America/Chicago"
     immich_microservices_docker_volumes_default:
       - "/mnt/unionfs/Media/Photos:/usr/src/app/upload"
-      - "{{ immich_microservices_paths_location }}/.dump:/usr/src/app/.reverse-geocoding-dump"
 
 - name: Add DNS record
   ansible.builtin.include_tasks: "{{ resources_tasks_path }}/dns/tasker.yml"
