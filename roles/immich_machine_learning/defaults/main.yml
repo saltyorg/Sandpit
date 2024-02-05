@@ -55,7 +55,7 @@ immich_machine_learning_docker_commands: "{{ immich_machine_learning_docker_comm
                                              + immich_machine_learning_docker_commands_custom }}"
 
 # Volumes
-immich_machine_learning_docker_volumes_default: 
+immich_machine_learning_docker_volumes_default:
   - "/etc/localtime:/etc/localtime:ro"
 immich_machine_learning_docker_volumes_custom: []
 immich_machine_learning_docker_volumes: "{{ immich_machine_learning_docker_volumes_default
