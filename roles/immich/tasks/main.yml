@@ -22,7 +22,8 @@
   vars:
     postgres_instances: ["{{ immich_name }}_postgres"]
     postgres_docker_env_db: "{{ immich_name }}"
-    postgres_docker_image_tag: "16"
+    postgres_docker_image_tag: "pg16-v0.1.11"
+    postgres_docker_image_repo: "tensorchord/pgvecto-rs"
     postgres_paths_folder: "{{ immich_name }}"
     postgres_paths_location: "{{ server_appdata_path }}/{{ postgres_paths_folder }}/postgres"
 
@@ -37,7 +38,7 @@
     immich_machine_learning_docker_envs_default:
       MACHINE_LEARNING_HOST: "{{ immich_name }}_machine_learning"
       MPLCONFIGDIR: "/map"
-      TZ: "America/Chicago"
+      TZ: "{{ tz }}"
     immich_machine_learning_docker_volumes_default:
       - "{{ immich_machine_learning_paths_location }}/.map:/map"
       - "{{ immich_machine_learning_paths_location }}/cache:/cache"
