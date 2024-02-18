@@ -1,0 +1,24 @@
+#!/bin/bash
+
+WORKING_DIR="{{ profilarr_paths_location }}"
+PYTHON_EXEC="{{ profilarr_paths_python_location }}"
+PYTHON_CMD="env --chdir=${WORKING_DIR} ${PYTHON_EXEC}"
+
+case "$1" in
+{% for py in profilarr_scripts.results %}
+  "{{ (py.path | basename)[:3] if (py.path | basename)[3] in 'aeiou' else (py.path | basename)[:4] }}" )
+    ${PYTHON_CMD} {{ py.path | basename }} "${@:2}"
+    ;;
+{% endfor %}
+  "" )
+    echo "Usage: $(basename "$0") <command>"
+    echo "Available commands:"
+    {% for py in profilarr_scripts.results %}
+      printf "  %-20s %s\n" "{{ (py.path | basename)[:3] if (py.path | basename)[3] in 'aeiou' else (py.path | basename)[:4] }}" "Run {{ py.path | basename }}"
+    {% endfor %}
+    ;;
+  *)
+    echo "Unknown command: $1"
+    exit 1
+    ;;
+esac

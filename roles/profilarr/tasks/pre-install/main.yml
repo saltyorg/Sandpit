@@ -1,0 +1,32 @@
+#########################################################################
+# Title:         Sandbox: Profilarr | Pre-Install Tasks                 #
+# Author(s):     keldian                                                #
+# URL:           https://github.com/saltyorg/Saltbox                    #
+# --                                                                    #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+- name: Find current configuration files
+  ansible.builtin.find:
+    paths: "{{ profilarr_paths_location }}"
+    use_regex: yes
+    patterns: ['^[^.]*\.(json|yml)$']
+    recurse: yes
+    excludes:
+  register: profilarr_config
+
+- name: Backup current configuration files
+  ansible.builtin.copy:
+    src: "{{ file.path }}"
+    dest: >-
+      {{ profilarr_paths_backup_location + '/'
+      + (file.path | basename | splitext | first)
+      + '.' + ('%Y-%m-%d' | strftime(file.mtime))
+      + (file.path | splitext | last) }}
+    owner: "{{ file.pw_name }}"
+    group: "{{ file.gr_name }}"
+    mode: "{{ file.mode }}"
+  loop: "{{ profilarr_config.files }}"
+  loop_control:
+    loop_var: file
