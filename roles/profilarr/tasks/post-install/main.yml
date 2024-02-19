@@ -1,0 +1,69 @@
+#########################################################################
+# Title:         Sandbox: Profilarr | Post-Install Tasks                #
+# Author(s):     keldian                                                #
+# URL:           https://github.com/saltyorg/Saltbox                    #
+# --                                                                    #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+- name: Lookup YAML content
+  when: not condition
+  ansible.builtin.shell:
+    cmd: "sed -n '/\"\"\"/, /\"\"\"/ {//!p}' {{ item }} | yyq --exit-status 'tag == \"!!map\" or tag== \"!!seq\"'"
+  ignore_errors: true
+  register: output
+  loop: "{{ profilarr_files | reverse }}"
+  loop_control:
+    label: "{{ item | basename }}"
+  vars:
+    condition: "{{ (output|default({'rc':1})).rc == 0 }}"
+
+- name: Get YAML content file
+  when: item.changed
+  ansible.builtin.set_fact:
+    yaml_container: "{{ item.item | d(profilarr_paths_location + '/setup.py') }}"
+  loop: "{{ output.results }}"
+
+- name: Create default configuration file
+  ansible.builtin.script:
+    cmd: "{{ yaml_container }}"
+    chdir: "{{ profilarr_paths_location }}"
+    executable: "{{ profilarr_paths_python_location | d('python3') }}"
+  become: true
+  become_user: "{{ user.name }}"
+
+- name: Get PVR info
+  ansible.builtin.include_tasks: "{{ resources_tasks_path }}/instances/get_info.yml"
+  vars:
+    get_info_list:
+      - radarr
+      - sonarr
+
+- name: Delete default instance configuration
+  ansible.builtin.shell: |
+    yyq -i 'del(.instances.*[])' {{ profilarr_paths_config_location }}
+
+- name: Insert Radarr info
+  when: radarr_info[instance]['api_key'] != 'not installed'
+  ansible.builtin.shell: >
+    yyq -i '.instances.radarr += {
+    "name": "{{ radarr_info[instance]['name'] }}",
+    "base_url": "{{ radarr_info[instance]['url'] }}",
+    "api_key": "{{ radarr_info[instance]['api_key'] }}"}'
+    {{ profilarr_paths_config_location }}
+  loop: "{{ radarr_info | flatten }}"
+  loop_control:
+    loop_var: instance
+
+- name: Insert Sonarr info
+  when: sonarr_info[instance]['api_key'] != 'not installed'
+  ansible.builtin.shell: >
+    yyq -i '.instances.sonarr += {
+    "name": "{{ sonarr_info[instance]['name'] }}",
+    "base_url": "{{ sonarr_info[instance]['url'] }}",
+    "api_key": "{{ sonarr_info[instance]['api_key'] }}"}'
+    {{ profilarr_paths_config_location }}
+  loop: "{{ sonarr_info | flatten }}"
+  loop_control:
+    loop_var: instance

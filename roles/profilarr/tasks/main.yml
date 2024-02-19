@@ -1,0 +1,123 @@
+#########################################################################
+# Title:         Sandbox: Profilarr | Deployment Tasks                  #
+# Author(s):     keldian                                                #
+# URL:           https://github.com/saltyorg/Saltbox                    #
+# --                                                                    #
+#########################################################################
+#                   GNU General Public License v3.0                     #
+#########################################################################
+---
+- name: Reset Profilarr
+  when: ('profilarr-reset' in ansible_run_tags)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ profilarr_paths_location }}"
+    - "{{ profilarr_paths_alias_location }}"
+
+- name: Create directories
+  ansible.builtin.include_tasks: "{{ resources_tasks_path }}/directories/create_directories.yml"
+
+- name: Pre-install tasks
+  when: ('profilarr-backup' in ansible_run_tags)
+  ansible.builtin.include_tasks: "pre-install/main.yml"
+
+- name: Set Python version
+  ansible.builtin.set_fact:
+    profilarr_python: "{{ 'python3'
+                       if ansible_distribution_version is version('20.04', '==')
+                       else 'python3.8' }}"
+
+- name: Execute Python role
+  ansible.builtin.include_role:
+    name: "python"
+  vars:
+    python_version: "3.8"
+  when: ansible_distribution_version is version('22.04', '==')
+
+- name: Delete venv directory
+  ansible.builtin.file:
+    path: "{{ profilarr_paths_venv_location }}"
+    state: absent
+
+- name: Get latest release info
+  ansible.builtin.uri:
+    url: "{{ profilarr_git_release_url }}"
+    return_content: true
+  register: profilarr_github_release
+
+- name: Download and extract latest archive
+  ansible.builtin.unarchive:
+    src: "{{ profilarr_github_release.json.tarball_url }}"
+    dest: "{{ profilarr_paths_location }}"
+    remote_src: true
+    list_files: true
+    exclude: "{{ profilarr_paths_blacklist }}"
+  register: profilarr_archive
+
+- name: Install program files
+  ansible.builtin.copy:
+    src: "{{ profilarr_paths_location }}/{{ profilarr_archive.files[0] }}"
+    dest: "{{ profilarr_paths_location }}"
+    owner: "{{ user.name }}"
+    group: "{{ user.name }}"
+    mode: "0664"
+
+- name: Get new file paths
+  ansible.builtin.set_fact:
+    profilarr_files: >
+      {{ profilarr_files | default([], true) + [item | replace
+      (profilarr_archive.files[0], profilarr_paths_location + '/')] }}
+  loop: "{{ profilarr_archive.files | reject('search', '/$') | list }}"
+
+- name: Cleanup
+  ansible.builtin.file:
+    path: "{{ profilarr_paths_location }}/{{ profilarr_archive.files[0] | dirname }}"
+    state: absent
+
+- name: Install pip requirements
+  ansible.builtin.pip:
+    requirements: "{{ profilarr_paths_requirements_location }}"
+    virtualenv_python: "{{ profilarr_python }}"
+    virtualenv: "{{ profilarr_paths_venv_location }}"
+  become: true
+  become_user: "{{ user.name }}"
+
+- name: Find pip3 path
+  ansible.builtin.find:
+    paths: "{{ profilarr_paths_venv_location }}"
+    recurse: yes
+    patterns: 'pip3'
+  register: pip3_found
+
+- name: Get pip3 directory name
+  ansible.builtin.set_fact:
+    profilarr_bin_dirname: "{{ pip3_found.files[0].path | dirname }}"
+
+- name: Make scripts executable
+  ansible.builtin.file:
+    path: "{{ file }}"
+    mode: a+x
+  register: profilarr_scripts
+  loop: "{{ profilarr_files | select('search', '(?<!helpers)\\.py$') }}"
+  loop_control:
+    loop_var: file
+
+- name: Generate bash wrapper
+  ansible.builtin.template:
+    src: profilarr.j2
+    dest: "{{ profilarr_paths_alias_location }}"
+    owner: "{{ user.name }}"
+    group: "{{ user.name }}"
+    mode: "0775"
+    force: true
+
+- name: Check if `{{ profilarr_paths_config_location | basename }}` exists
+  ansible.builtin.stat:
+    path: "{{ profilarr_paths_config_location }}"
+  register: profilarr_config
+
+- name: Post-install tasks
+  when: not profilarr_config.stat.exists
+  ansible.builtin.include_tasks: "post-install/main.yml"

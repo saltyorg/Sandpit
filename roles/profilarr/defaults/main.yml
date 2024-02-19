@@ -1,0 +1,42 @@
+##########################################################################
+# Title:         Sandbox: Profilarr | Default Variables                  #
+# Author(s):     keldian                                                 #
+# URL:           https://github.com/saltyorg/Saltbox                     #
+# --                                                                     #
+##########################################################################
+#                   GNU General Public License v3.0                      #
+##########################################################################
+---
+################################
+# Basics
+################################
+
+profilarr_name: profilarr
+
+profilarr_git_release_url: "https://api.github.com/repos/santiagosayshey/Profilarr/releases/latest"
+
+################################
+# Locations
+################################
+
+profilarr_paths_basename: "{{ profilarr_name }}"
+profilarr_paths_location: "{{ server_appdata_path }}/{{ profilarr_paths_basename }}"
+profilarr_paths_venv_location: "{{ profilarr_paths_location }}/venv"
+profilarr_paths_python_location: "{{ profilarr_bin_dirname }}/python3"
+profilarr_paths_requirements_location: "{{ profilarr_paths_location }}/requirements.txt"
+profilarr_paths_config_location: "{{ profilarr_paths_location }}/config.yml"
+profilarr_paths_backup_location: "{{ profilarr_paths_location }}/backup"
+profilarr_paths_alias_location: "/usr/local/bin/{{ profilarr_name }}"
+
+profilarr_paths_folders_list:
+  - "{{ profilarr_paths_location }}"
+  - "{{ profilarr_paths_backup_location }}"
+
+profilarr_paths_blacklist_default:
+  - ".gitignore"
+  - "LICENSE"
+  - "README.md"
+  - "develop"
+profilarr_paths_blacklist_custom: []
+profilarr_paths_blacklist: "{{ profilarr_paths_blacklist_default
+                               + profilarr_paths_blacklist_custom }}"
