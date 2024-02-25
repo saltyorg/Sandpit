@@ -1,5 +1,5 @@
 #########################################################################
-# Title:            Sandpit: Zigbee2mqtt                                #
+# Title:            Sandpit: zigbee2mqtt                                #
 # Author(s):        CHAIR/Raneydazed                                    #
 # URL:              https://github.com/saltyorg/Sandpit                 #
 # --                                                                    #
@@ -19,6 +19,8 @@ zigbee2mqtt_name: zigbee2mqtt
 
 zigbee2mqtt_paths_folder: "{{ zigbee2mqtt_name }}"
 zigbee2mqtt_paths_location: "{{ server_appdata_path }}/{{ zigbee2mqtt_paths_folder }}"
+zigbee2mqtt_config_location: "{{ zigbee2mqtt_paths_location }}/configuration.yaml"
+zigbee2mqtt_mqtt_config_location: "{{ server_appdata_path }}/mqtt/config/mosquitto.conf"
 zigbee2mqtt_paths_folders_list:
   - "{{ zigbee2mqtt_paths_location }}"
 
@@ -150,5 +152,6 @@ zigbee2mqtt_docker_state: started
 zigbee2mqtt_docker_user: "{{ uid }}:{{ gid }}"
 
 # Group Add
+
 zigbee2mqtt_docker_groups:
   - "dialout"
