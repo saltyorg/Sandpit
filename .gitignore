@@ -13,7 +13,6 @@
 /*.retry
 
 # Sandpit
-/ansible.cfg
 /*.yml
 !/sandpit.yml
 
