@@ -1,0 +1,147 @@
+##########################################################################
+# Title:         Sandpit: Panelarr | Default Variables                   #
+# Author(s):     thug-drama                                              #
+# URL:           https://github.com/saltyorg/Sandpit                     #
+# --                                                                     #
+##########################################################################
+#                   GNU General Public License v3.0                      #
+##########################################################################
+---
+################################
+# Basics
+################################
+
+panelarr_name: panelarr
+
+################################
+# Paths
+################################
+
+panelarr_paths_folder: "{{ panelarr_name }}"
+panelarr_paths_location: "{{ server_appdata_path }}/{{ panelarr_paths_folder }}"
+panelarr_paths_folders_list:
+  - "{{ panelarr_paths_location }}"
+
+################################
+# Web
+################################
+
+panelarr_web_subdomain: "{{ panelarr_name }}"
+panelarr_web_domain: "{{ user.domain }}"
+panelarr_web_port: "8000"
+panelarr_web_url: "{{ 'https://' + (panelarr_web_subdomain + '.' + panelarr_web_domain
+                   if (panelarr_web_subdomain | length > 0)
+                   else panelarr_web_domain) }}"
+
+################################
+# DNS
+################################
+
+panelarr_dns_record: "{{ panelarr_web_subdomain }}"
+panelarr_dns_zone: "{{ panelarr_web_domain }}"
+panelarr_dns_proxy: "{{ dns.proxied }}"
+
+################################
+# Traefik
+################################
+
+panelarr_traefik_sso_middleware: "{{ traefik_default_sso_middleware }}"
+panelarr_traefik_middleware_default: "{{ traefik_default_middleware }}"
+panelarr_traefik_middleware_custom: ""
+panelarr_traefik_certresolver: "{{ traefik_default_certresolver }}"
+panelarr_traefik_enabled: true
+panelarr_traefik_api_enabled: true
+panelarr_traefik_api_endpoint: "PathPrefix(`/api`) || PathPrefix(`/ws`)"
+
+################################
+# Docker
+################################
+
+# Container
+panelarr_docker_container: "{{ panelarr_name }}"
+
+# Image
+panelarr_docker_image_pull: true
+panelarr_docker_image_tag: "latest"
+panelarr_docker_image: "ghcr.io/thug-drama/panelarr:{{ panelarr_docker_image_tag }}"
+
+# Ports
+panelarr_docker_ports_defaults: []
+panelarr_docker_ports_custom: []
+panelarr_docker_ports: "{{ panelarr_docker_ports_defaults
+                           + panelarr_docker_ports_custom }}"
+
+# Envs
+panelarr_docker_envs_default:
+  PUID: "{{ uid }}"
+  PGID: "{{ gid }}"
+  TZ: "{{ tz }}"
+panelarr_docker_envs_custom: {}
+panelarr_docker_envs: "{{ panelarr_docker_envs_default
+                          | combine(panelarr_docker_envs_custom) }}"
+
+# Commands
+panelarr_docker_commands_default: []
+panelarr_docker_commands_custom: []
+panelarr_docker_commands: "{{ panelarr_docker_commands_default
+                              + panelarr_docker_commands_custom }}"
+
+# Volumes
+panelarr_docker_volumes_default:
+  - "{{ panelarr_paths_location }}:/config"
+  - "/var/run/docker.sock:/var/run/docker.sock:ro"
+panelarr_docker_volumes_custom: []
+panelarr_docker_volumes: "{{ panelarr_docker_volumes_default
+                             + panelarr_docker_volumes_custom }}"
+
+# Devices
+panelarr_docker_devices_default: []
+panelarr_docker_devices_custom: []
+panelarr_docker_devices: "{{ panelarr_docker_devices_default
+                             + panelarr_docker_devices_custom }}"
+
+# Hosts
+panelarr_docker_hosts_default: []
+panelarr_docker_hosts_custom: []
+panelarr_docker_hosts: "{{ docker_hosts_common
+                           | combine(panelarr_docker_hosts_default)
+                           | combine(panelarr_docker_hosts_custom) }}"
+
+# Labels
+panelarr_docker_labels_default: {}
+panelarr_docker_labels_custom: {}
+panelarr_docker_labels: "{{ docker_labels_common
+                            | combine(panelarr_docker_labels_default)
+                            | combine(panelarr_docker_labels_custom) }}"
+
+# Hostname
+panelarr_docker_hostname: "{{ panelarr_name }}"
+
+# Networks
+panelarr_docker_networks_alias: "{{ panelarr_name }}"
+panelarr_docker_networks_default: []
+panelarr_docker_networks_custom: []
+panelarr_docker_networks: "{{ docker_networks_common
+                              + panelarr_docker_networks_default
+                              + panelarr_docker_networks_custom }}"
+
+# Capabilities
+panelarr_docker_capabilities_default:
+  - CHOWN
+  - SETUID
+  - SETGID
+panelarr_docker_capabilities_custom: []
+panelarr_docker_capabilities: "{{ panelarr_docker_capabilities_default
+                                  + panelarr_docker_capabilities_custom }}"
+
+# Security Opts
+panelarr_docker_security_opts_default: []
+panelarr_docker_security_opts_custom: []
+panelarr_docker_security_opts: "{{ panelarr_docker_security_opts_default
+                                   + panelarr_docker_security_opts_custom }}"
+
+# Restart Policy
+panelarr_docker_restart_policy: unless-stopped
+
+# State
+panelarr_docker_state: started
